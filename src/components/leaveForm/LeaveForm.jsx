@@ -5,7 +5,7 @@ import { serverUrl } from '../../utils/serverUrl';
 import './leaveForm.scss';
 import { toast } from 'react-hot-toast';
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
 
 const LeaveForm = () => {
   const [username, setUsername] = useState('');
@@ -16,6 +16,7 @@ const LeaveForm = () => {
   const [users, setUsers] = useState([]);
   const [localStorageUser, setLocalStorageUser] = useState('');
   const [loading, setLoading] = useState(false);
+  const [duration, setDuration] = useState(1);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,24 +53,52 @@ const LeaveForm = () => {
   };
 
   const handleStartDateChange = (date) => {
-    setStartDate(date);
+    const currentDate = new Date();
+    const selectedDate = new Date(date.setHours(0, 0, 0, 0));
+    const currentDay = new Date(currentDate.setHours(0, 0, 0, 0));
+  
+    if (selectedDate < currentDay) {
+      toast.error('Start date cannot be before the current date.');
+      setStartDate(currentDate);
+    } else if (endDate < date) {
+      toast.error('End date cannot be earlier than start date.');
+      setStartDate(endDate);
+    } else {
+      setStartDate(date);
+      if (selectedDate.getTime() === currentDay.getTime()) {
+        setDuration(1);
+      } else {
+        calculateDuration(date, endDate);
+      }
+    }
   };
+  
 
   const handleEndDateChange = (date) => {
-    setEndDate(date);
+    const currentDate = new Date();
+    const selectedDate = new Date(date.setHours(0, 0, 0, 0));
+    const currentDay = new Date(currentDate.setHours(0, 0, 0, 0));
+
+    if (selectedDate < currentDay) {
+      toast.error('End date cannot be before the current date.');
+      setEndDate(currentDate);
+    } else if (date < startDate) {
+      toast.error('End date cannot be earlier than the start date.');
+      setEndDate(startDate);
+    } else {
+      setEndDate(date);
+      calculateDuration(startDate, date);
+    }
   };
 
-  const calculateDurationInDays = () => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const durationInDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    return durationInDays;
+  const calculateDuration = (start, end) => {
+    const timeDifference = end.getTime() - start.getTime();
+    const durationInDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+    setDuration(durationInDays);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const duration = calculateDurationInDays();
 
     const leaveData = {
       username,
@@ -137,6 +166,7 @@ const LeaveForm = () => {
                 showYearDropdown
                 showMonthDropdown
                 dropdownMode="select"
+                minDate={new Date()}
               />
             </div>
             <br />
@@ -149,12 +179,13 @@ const LeaveForm = () => {
                 showYearDropdown
                 showMonthDropdown
                 dropdownMode="select"
+                minDate={new Date()}
               />
             </div>
             <br />
             <div className="input">
               <label>Duration (in days):</label>
-              <input type="number" value={calculateDurationInDays()} disabled />
+              <input type="number" value={duration} disabled />
             </div>
             <br />
             <button type="submit" disabled={loading}>
