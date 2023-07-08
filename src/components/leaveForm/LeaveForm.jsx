@@ -63,6 +63,7 @@ const LeaveForm = () => {
     } else if (endDate < date) {
       toast.error('End date cannot be earlier than start date.');
       setStartDate(endDate);
+      setDuration(1);
     } else {
       setStartDate(date);
       if (selectedDate.getTime() === currentDay.getTime()) {
@@ -85,6 +86,7 @@ const LeaveForm = () => {
     } else if (date < startDate) {
       toast.error('End date cannot be earlier than the start date.');
       setEndDate(startDate);
+      setDuration(1)
     } else {
       setEndDate(date);
       calculateDuration(startDate, date);
